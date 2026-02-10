@@ -1,0 +1,49 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\Debug\Post_lab_1.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>Post_lab_1.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>Post_lab_1.map</FILE>
+  <FILE>Post_lab_1.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <SETUP><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>26</LINE></SETUP>
+  <MAIN_LOOP><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>77</LINE></MAIN_LOOP>
+  <CONT_1><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>86</LINE></CONT_1>
+  <CONT_2><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>108</LINE></CONT_2>
+  <SUMADOR><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>155</LINE></SUMADOR>
+  <ALTOS><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>131</LINE></ALTOS>
+  <DELAY><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>197</LINE></DELAY>
+  <INC_1><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>212</LINE></INC_1>
+  <DEC_1><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>216</LINE></DEC_1>
+  <BAJOS><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>144</LINE></BAJOS>
+  <INC_2><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>233</LINE></INC_2>
+  <DEC_2><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>237</LINE></DEC_2>
+  <NO_OVER><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>177</LINE></NO_OVER>
+  <LED_SUMA><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>180</LINE></LED_SUMA>
+  <ESPERAR_SUMA><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>190</LINE></ESPERAR_SUMA>
+  <DELAY_0><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>199</LINE></DELAY_0>
+  <DELAY_1><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>201</LINE></DELAY_1>
+  <DELAY_2><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>203</LINE></DELAY_2>
+  <ANTI_REB_1><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>221</LINE></ANTI_REB_1>
+  <ANTI_REB_2><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>226</LINE></ANTI_REB_2>
+  <ANTI_REB_3><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>242</LINE></ANTI_REB_3>
+  <ANTI_REB_4><FILE>C:\Users\jualo\OneDrive\Documents\Atmel Studio\Lab_1.1\Post_lab_1\Post_lab_1\main.asm</FILE><LINE>247</LINE></ANTI_REB_4>
+ </LABELS>
+</ASSEMBLER_INFO>
