@@ -1,0 +1,49 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\Debug\Prelab 2.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>Prelab 2.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>Prelab 2.map</FILE>
+  <FILE>Prelab 2.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <SETUP><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>26</LINE></SETUP>
+  <table7seg><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>22</LINE></table7seg>
+  <INIT_T0><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>192</LINE></INIT_T0>
+  <DISPLAY><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>133</LINE></DISPLAY>
+  <MAIN_LOOP><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>98</LINE></MAIN_LOOP>
+  <BOT_INC><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>107</LINE></BOT_INC>
+  <BOT_RES><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>115</LINE></BOT_RES>
+  <TICK_10MS><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>209</LINE></TICK_10MS>
+  <ANTI_REB_1><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>151</LINE></ANTI_REB_1>
+  <SUMA><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>123</LINE></SUMA>
+  <ANTI_REB_2><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>161</LINE></ANTI_REB_2>
+  <RESTA><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>128</LINE></RESTA>
+  <DELAY><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>174</LINE></DELAY>
+  <SOLTAR_1><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>155</LINE></SOLTAR_1>
+  <SOLTAR_2><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>165</LINE></SOLTAR_2>
+  <DELAY_0><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>176</LINE></DELAY_0>
+  <DELAY_1><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>178</LINE></DELAY_1>
+  <DELAY_2><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>180</LINE></DELAY_2>
+  <TICK_END><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>228</LINE></TICK_END>
+  <LEDS_BIN><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>231</LINE></LEDS_BIN>
+  <OVERFLOW_CHECK><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>243</LINE></OVERFLOW_CHECK>
+  <FIN_OVERFLOW><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\Pre laboratorio 2\Prelab 2\Prelab 2\main.asm</FILE><LINE>257</LINE></FIN_OVERFLOW>
+ </LABELS>
+</ASSEMBLER_INFO>
