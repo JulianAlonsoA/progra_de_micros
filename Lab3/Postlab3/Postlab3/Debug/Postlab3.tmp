@@ -1,0 +1,46 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.8</VERSION>
+ <DEVICE>"ATmega328P"</DEVICE>
+ <WORKING_DIR>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc</FILE>
+  <FILE>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\M328PDEF.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\Debug\Postlab3.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>Postlab3.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>Postlab3.map</FILE>
+  <FILE>Postlab3.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <d_10ms><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>14</LINE></d_10ms>
+  <unidades><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>15</LINE></unidades>
+  <decenas><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>16</LINE></decenas>
+  <mux><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>17</LINE></mux>
+  <RESET><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>29</LINE></RESET>
+  <TMR0_ISR><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>177</LINE></TMR0_ISR>
+  <SETUP><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>37</LINE></SETUP>
+  <MAIN_LOOP><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>99</LINE></MAIN_LOOP>
+  <SEG7_DECODE><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>105</LINE></SEG7_DECODE>
+  <TABLA_S7><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>256</LINE></TABLA_S7>
+  <SEG7_WRITE><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>122</LINE></SEG7_WRITE>
+  <DIG_SELECT><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>154</LINE></DIG_SELECT>
+  <SHOW_UNI><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>168</LINE></SHOW_UNI>
+  <SAVE_TICK><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>221</LINE></SAVE_TICK>
+  <SAVE_UNI><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>217</LINE></SAVE_UNI>
+  <SAVE_DEC><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>213</LINE></SAVE_DEC>
+  <UPDATE_DISPLAY><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>224</LINE></UPDATE_DISPLAY>
+  <LOAD_UNI><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>240</LINE></LOAD_UNI>
+  <DECODE_AND_SHOW><FILE>C:\Users\jualo\OneDrive\Documents\progra_micros\progra_de_micros\Lab3\Postlab3\Postlab3\main.asm</FILE><LINE>243</LINE></DECODE_AND_SHOW>
+ </LABELS>
+</ASSEMBLER_INFO>
