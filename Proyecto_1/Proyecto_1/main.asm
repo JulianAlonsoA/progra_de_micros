@@ -1,0 +1,1628 @@
+/*
+* NombreProgra.asm
+*
+* Creado: 02/03/2026
+* Autor : Julian Alonso
+* Descripción: Proyecto 1.
+
+ Encabezado (Definición de Registros, Variables y Constantes)
+.include "M328PDEF.inc"      Include definitions specific to ATMega328P
+
+*/
+
+//----------MODOS-------------------/
+.equ	MODE_CLOCK		= 0
+.equ	MODE_SET_CLOCK	= 1
+.equ	MODE_DATE		= 2
+.equ	MODE_SET_DATE	= 3
+.equ	MODE_SET_ALARM	= 4
+.equ	MODE_RING		= 5
+.equ	MAX_MODES		= 5
+
+//----------BANDERAS---------------/
+.equ	FLAG_PCINT		= 0
+.equ	FLAG_TIMER_1	= 1
+
+//----------DATOS-----------------/
+.equ	T0VALUE			= 0x7C // Prescaler de 8
+.equ	T1VALUE			= 0x3D08 // Prescaler de 64
+
+//----------PATRONES DE SEGMENTOS-----------------/
+.equ	SEG_C		= 0b0111001
+.equ	SEG_L		= 0b0111000
+.equ	SEG_O		= 0b0111111
+.equ	SEG_d		= 0b1011110
+.equ	SEG_A		= 0b1110111
+.equ	SEG_t		= 0b1111000
+.equ	SEG_E		= 0b1111001
+.equ	SEG_S		= 0b1101101
+.equ	SEG_r		= 0b1010000
+.equ	SEG_I		= 0b0000110
+.equ	SEG_n		= 0b1010100
+.equ	SEG_G		= 0b0111101
+
+.equ	SEG_0		= 0b0111111
+.equ	SEG_1		= 0b0000110
+.equ	SEG_2		= 0b1011011
+.equ	SEG_3		= 0b1001111
+.equ	SEG_4		= 0b1100110
+.equ	SEG_5		= 0b1101101
+.equ	SEG_6		= 0b1111101
+.equ	SEG_7		= 0b0000111
+.equ	SEG_8		= 0b1111111
+.equ	SEG_9		= 0b1101111
+
+//----------REGISTROS-----------------/
+.def	MODE			= R20
+.def	ACTION			= R21
+
+.dseg
+.org    SRAM_START
+
+// -----------DISPLAY------------/
+DISP0:		.byte 1
+DISP1:		.byte 1
+DISP2:		.byte 1
+DISP3:		.byte 1
+
+MUX:		.byte 1 // 0 - 3
+
+MENSAJE:	.byte 1 // Mensaje de modo
+MEN_LOW:	.byte 1
+MEN_HIGH:	.byte 1
+
+PREV_D7:	.byte 1 // Guarda el estado anterior
+PUNTO_CONT:	.byte 1 // contador para parpadeo de :
+PUNTO_HALF:	.byte 1
+
+SEGUNDOS:	.byte 1
+MINUTOS:	.byte 1
+HORAS:		.byte 1
+
+DIA:		.byte 1
+MES:		.byte 1
+
+AL_HORAS:	.byte 1
+AL_MINUTOS:	.byte 1
+AL_ACTIVA:	.byte 1
+
+//variable_name:     .byte   1   // Memory alocation for variable_name:     .byte   (byte size)
+
+.cseg
+.org 0x0000
+
+	JMP		START
+.org	PCI1addr	// Interrupciones para puerto C
+	JMP		PINC_ISR
+
+.org	PCI2addr	// Interrupciones para puerto D
+	JMP		PIND_ISR
+
+.org	OC1Aaddr	// Interrupciones para Timer 1 Compare match A
+	JMP		TIMER1_ISR
+
+.org	OC0Aaddr	// Interrupciones para Timer 0Compare match A
+	JMP		TIMER0_ISR
+
+START:
+ /****************************************/
+// Configuración de la pila
+LDI     R16, LOW(RAMEND)
+OUT     SPL, R16
+LDI     R16, HIGH(RAMEND)
+OUT     SPH, R16
+/****************************************/
+// Configuracion MCU
+SETUP:
+
+	// Configuramos el reloj a 1 MHz
+    CLI
+	LDI		R16, (1<< CLKPCE)
+	STS		CLKPR, R16
+	LDI		R16, (1<< CLKPS2)
+	STS		CLKPR, R16
+
+	// Iniciamos registros
+	CLR		MODE
+	CLR		ACTION
+
+	// Llammamos para mostrar al inicio donde estamos
+	CALL	LOAD_MODE_MENSAJE
+
+	// Ponemos el mux en 0
+	CLR		R16
+	STS		MUX, R16
+
+	// Iniciamos variables del reloj
+	STS		SEGUNDOS, R16
+	STS		MINUTOS, R16
+	STS		PUNTO_CONT, R16
+	STS		PUNTO_HALF, R16
+
+	// Inicializamos hora predeterminada
+	LDI		R16, 12
+	STS		HORAS, R16
+
+	// Inicializamos una fecha predeterminada
+	LDI		R16, 10
+	STS		DIA, R16
+	LDI		R16, 3
+	STS		MES, R16
+
+		// Inicializamos alarma predeterminada
+	LDI		R16, 6
+	STS		AL_HORAS, R16
+
+	CLR		R16
+	STS		AL_MINUTOS, R16
+	STS		AL_ACTIVA, R16
+
+	// Iniciaos mensaje para mostrar al inicio
+	LDI		R16, 1
+	STS		MENSAJE, R16
+
+	LDI		R16, LOW(1000)
+	STS		MEN_LOW, R16
+	LDI		R16, HIGH(1000)
+	STS		MEN_HIGH, R16
+
+	// Configuramos los botones con pullup
+	CBI		DDRC, DDC2
+	CBI		DDRC, DDC3
+	CBI		DDRC, DDC4
+	CBI		DDRC, DDC5
+
+	SBI		PORTC, PORTC2
+	SBI		PORTC, PORTC3
+	SBI		PORTC, PORTC4
+	SBI		PORTC, PORTC5
+
+	CBI		DDRD, DDD7 // boton de modo
+	SBI		PORTD, PORTD7
+
+	// Configuramos los leds del display apagados
+	SBI		DDRB, DDB0	// a
+	SBI		DDRB, DDB1	// b
+	SBI		DDRB, DDB2	// c
+	SBI		DDRB, DDB3	// d
+	SBI		DDRB, DDB4	// e
+	SBI		DDRB, DDB5	// f
+	SBI		DDRC, DDC0	// g
+	SBI		DDRC, DDC1	// : o DP
+
+	CBI		PORTB, PORTB0
+	CBI		PORTB, PORTB1
+	CBI		PORTB, PORTB2
+	CBI		PORTB, PORTB3
+	CBI		PORTB, PORTB4
+	CBI		PORTB, PORTB5
+	CBI		PORTC, PORTC0
+	CBI		PORTC, PORTC1
+
+	// Configuramos los bits de control
+	SBI		DDRD, DDD2 // DIG 1
+	SBI		DDRD, DDD3 // DIG 2
+	SBI		DDRD, DDD4 // DIG 3
+	SBI		DDRD, DDD5 // DIG 4
+
+	CBI		PORTD, PORTD2
+	CBI		PORTD, PORTD3
+	CBI		PORTD, PORTD4
+	CBI		PORTD, PORTD5
+
+	// Configuramos la alarma
+	SBI		DDRD, DDD6
+	CBI		PORTD, PORTD6
+
+	// Habilitamos las interrupciones para PCINT
+	LDI		R16, (1 << PCIE1)|(1 << PCIE2)
+	STS		PCICR, R16
+
+	LDI		R16, (1<<PCINT10) | (1<<PCINT11) | (1<<PCINT12) | (1<<PCINT13)
+	STS		PCMSK1, R16
+
+	LDI		R16, (1<<PCINT23)
+	STS		PCMSK2, R16
+
+	// Llamamos a los timer
+	CALL	INIT_TIMER0
+	CALL	INIT_TIMER1
+
+	// Guardamos el estado inicial del boton de modo
+	IN		R16, PIND
+	STS		PREV_D7, R16
+
+	SEI // ENABLE GLOBAL INTERRUPCIONS
+
+/****************************************/
+// Loop Infinito
+MAIN_LOOP:
+	
+	// Si hay interrupcion por pin change procesamos los botones
+	SBRS	ACTION, FLAG_PCINT
+	RJMP	NO_PCINT
+
+	// Limpiamos la bandera
+	CBR		ACTION, (1<<FLAG_PCINT)
+
+	// Funciona solo cuando sono la alarma
+	CPI		MODE, MODE_RING
+	BRNE	REVISAR_MODO_NORMAL
+	RJMP	REVISAR_RING
+
+REVISAR_MODO_NORMAL:	
+	// Revisamos el boton de modo
+	CALL	CHECK_MODE_BUTTON
+	RJMP	NO_PCINT
+
+REVISAR_RING:
+	CALL	CHECK_SILENCIO_RING
+
+NO_PCINT:
+
+	// Revisamos botones de ajuste
+	CALL	CHECK_AJUSTES
+
+	// Si Timer1 dio tick de 1 segundo, actualizamos reloj
+	SBRS	ACTION, FLAG_TIMER_1
+	RJMP	CHECK_ALARMA_LOOP
+
+	CBR		ACTION, (1<<FLAG_TIMER_1)
+	CALL	ACTUALIZAR_RELOJ
+	CALL	RESET_ALARMA_CAMBIO_MINUTO
+
+CHECK_ALARMA_LOOP:
+	CALL	CHECK_ALARM
+	CALL	CONTROL_RING
+	CALL	CHECK_SILENCIO_RING
+
+CHECK_MENSAJE:
+	LDS		R16, MENSAJE
+	CPI		R16, 1
+	BREQ	SALTAR_ACTUALIZACION
+
+	CALL	ACTUALIZAR_DISPLAY
+
+SALTAR_ACTUALIZACION:
+    RJMP    MAIN_LOOP
+
+
+/****************************************/
+// NON-Interrupt subroutines
+
+// Delay pequeno para los botones
+DELAY_REBOTE:
+	LDI		R16, 25
+
+REBOTE_LOOP1:
+	LDI		R17, 120
+
+REBOTE_LOOP2:
+	DEC		R17
+	BRNE	REBOTE_LOOP2
+
+	DEC		R16
+	BRNE	REBOTE_LOOP1
+	RET
+
+
+// Revisa que bloque de ajustes ejecutar
+CHECK_AJUSTES:
+	CPI		MODE, MODE_SET_CLOCK
+	BRNE	REVISAR_SET_DATE
+	RJMP	CHECK_SET_CLOCK
+
+REVISAR_SET_DATE:
+	CPI		MODE, MODE_SET_DATE
+	BRNE	REVISAR_SET_ALARM
+	RJMP	CHECK_SET_DATE
+
+REVISAR_SET_ALARM:
+	CPI		MODE, MODE_SET_ALARM
+	BRNE	SALIR_CHECK_AJUSTES
+	RJMP	CHECK_SET_ALARM
+
+SALIR_CHECK_AJUSTES:
+	RET
+
+
+//	Revisa la hora actual coincide con la alarma puesta
+CHECK_ALARM:
+
+	LDS		R16, AL_ACTIVA
+	CPI		R16, 1
+	BREQ	SALIR_CHECK_ALARM
+
+	LDS		R16, HORAS
+	LDS		R17, AL_HORAS
+	CP		R16, R17
+	BRNE	SALIR_CHECK_ALARM
+
+	LDS		R16, MINUTOS
+	LDS		R17, AL_MINUTOS
+	CP		R16, R17
+	BRNE	SALIR_CHECK_ALARM
+
+	LDS		R16, SEGUNDOS
+	CPI		R16, 0
+	BRNE	SALIR_CHECK_ALARM
+
+	LDI		R16, 1
+	STS		AL_ACTIVA, R16
+
+	LDI		R16, MODE_RING
+	MOV		MODE, R16
+
+SALIR_CHECK_ALARM:
+	RET
+
+
+// Enciende o apaga el buzzer respecto a la alarma
+CONTROL_RING:
+
+	LDS		R16, AL_ACTIVA
+	CPI		MODE, MODE_RING
+	BRNE	APAGAR_RING
+
+	// Encendemos buzzer
+	SBI		PORTD, PORTD6
+	RET
+
+APAGAR_RING:
+
+	// Apagamos buzzer
+	CBI		PORTD, PORTD6
+	RET
+
+
+// Permite apagar el buzzer entrando al modo oculto de ring
+CHECK_SILENCIO_RING:
+	CPI		MODE, MODE_RING
+	BRNE	SALIR_SILENCIO_RING
+
+	SBIS	PIND, PIND7
+	RJMP	CONFIRMAR_SILENCIO
+	RET
+
+CONFIRMAR_SILENCIO:
+	CALL	DELAY_REBOTE
+	SBIS	PIND, PIND7
+	RJMP	APAGAR_ALARMA
+	RET
+
+APAGAR_ALARMA:
+	
+	CLR		R16
+	STS		AL_ACTIVA, R16
+
+	LDI		R16, MODE_CLOCK
+	MOV		MODE, R16
+
+	IN		R16, PIND
+	STS		PREV_D7, R16
+
+ESPERA_SUELTA_SILENCIO:
+	SBIC	PIND, PIND7
+	RJMP	SALIR_SILENCIO_RING
+	RJMP	ESPERA_SUELTA_SILENCIO
+
+SALIR_SILENCIO_RING:
+	RET
+
+
+// Reactiva la posibilidad de volver a prender la alarma
+RESET_ALARMA_CAMBIO_MINUTO:
+	LDS		R16, SEGUNDOS
+	CPI		R16, 1
+	BRNE	SALIR_RESET_ALARMA
+
+	CLR		R16
+	STS		AL_ACTIVA, R16
+
+SALIR_RESET_ALARMA:
+	RET
+
+
+// Revisa los botones de ajustes en hora
+CHECK_SET_CLOCK:
+	SBIS	PINC, PINC2
+	CALL	BOTON_INC_HORA
+
+	SBIS	PINC, PINC3
+	CALL	BOTON_DEC_HORA
+
+	SBIS	PINC, PINC4
+	CALL	BOTON_INC_MIN
+
+	SBIS	PINC, PINC5
+	CALL	BOTON_DEC_MIN
+
+	RET
+
+
+// Revisa los botones de ajustes en fecha
+CHECK_SET_DATE:
+	SBIS	PINC, PINC2
+	CALL	BOTON_INC_DIA
+
+	SBIS	PINC, PINC3
+	CALL	BOTON_DEC_DIA
+
+	SBIS	PINC, PINC4
+	CALL	BOTON_INC_MES
+
+	SBIS	PINC, PINC5
+	CALL	BOTON_DEC_MES
+
+	RET
+
+
+// Revisa los botones que ajustan la alarma
+CHECK_SET_ALARM:
+	SBIS	PINC, PINC2
+	CALL	BOTON_INC_AL_HORA
+
+	SBIS	PINC, PINC3
+	CALL	BOTON_DEC_AL_HORA
+
+	SBIS	PINC, PINC4
+	CALL	BOTON_INC_AL_MIN
+
+	SBIS	PINC, PINC5
+	CALL	BOTON_DEC_AL_MIN
+
+	RET
+
+
+// Permite incrementar la hora con antirebote
+BOTON_INC_AL_HORA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC2
+	RJMP	CONFIRM_INC_AL_HORA
+	RET
+
+CONFIRM_INC_AL_HORA:
+	CALL	INC_AL_HORAS
+
+ESPERA_SUELTA_INC_AL_HORA:
+	SBIC	PINC, PINC2
+	RET
+	RJMP	ESPERA_SUELTA_INC_AL_HORA
+
+
+// Permite restar la hora con antirebote
+BOTON_DEC_AL_HORA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC3
+	RJMP	CONFIRM_DEC_AL_HORA
+	RET
+
+CONFIRM_DEC_AL_HORA:
+	CALL	DEC_AL_HORAS
+
+ESPERA_SUELTA_DEC_AL_HORA:
+	SBIC	PINC, PINC3
+	RET
+	RJMP	ESPERA_SUELTA_DEC_AL_HORA
+
+
+// Permite incrementar los minutos con antirebote
+BOTON_INC_AL_MIN:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC4
+	RJMP	CONFIRM_INC_AL_MIN
+	RET
+
+CONFIRM_INC_AL_MIN:
+	CALL	INC_AL_MINUTOS
+
+ESPERA_SUELTA_INC_AL_MIN:
+	SBIC	PINC, PINC4
+	RET
+	RJMP	ESPERA_SUELTA_INC_AL_MIN
+
+
+// Permite restar los minutos con antirebote
+BOTON_DEC_AL_MIN:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC5
+	RJMP	CONFIRM_DEC_AL_MIN
+	RET
+
+CONFIRM_DEC_AL_MIN:
+	CALL	DEC_AL_MINUTOS
+
+ESPERA_SUELTA_DEC_AL_MIN:
+	SBIC	PINC, PINC5
+	RET
+	RJMP	ESPERA_SUELTA_DEC_AL_MIN
+
+
+// Incremento las horas con overflow
+INC_AL_HORAS:
+	LDS		R16, AL_HORAS
+	INC		R16
+	CPI		R16, 24
+	BRNE	GUARDAR_INC_AL_HORAS
+
+	CLR		R16
+
+GUARDAR_INC_AL_HORAS:
+	STS		AL_HORAS, R16
+	RET
+
+// Resta las horas con overflow
+DEC_AL_HORAS:
+	LDS		R16, AL_HORAS
+	CPI		R16, 0
+	BRNE	RESTAR_AL_HORA
+
+	LDI		R16, 23
+	STS		AL_HORAS, R16
+	RET
+
+RESTAR_AL_HORA:
+	DEC		R16
+	STS		AL_HORAS, R16
+	RET
+
+
+// INcremento los minutos con overflow
+INC_AL_MINUTOS:
+	LDS		R16, AL_MINUTOS
+	INC		R16
+	CPI		R16, 60
+	BRNE	GUARDAR_INC_AL_MIN
+
+	CLR		R16
+
+GUARDAR_INC_AL_MIN:
+	STS		AL_MINUTOS, R16
+	RET
+
+
+// Resta los minutos con underflow
+DEC_AL_MINUTOS:
+	LDS		R16, AL_MINUTOS
+	CPI		R16, 0
+	BRNE	RESTAR_AL_MIN
+
+	LDI		R16, 59
+	STS		AL_MINUTOS, R16
+	RET
+
+RESTAR_AL_MIN:
+	DEC		R16
+	STS		AL_MINUTOS, R16
+	RET
+
+
+// Boton para incrementar hora con antirebote
+BOTON_INC_HORA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC2
+	RJMP	CONFIRM_INC_HORA
+	RET
+
+CONFIRM_INC_HORA:
+	CALL	INC_HORAS
+
+ESPERA_SUELTA_INC_HORA:
+	SBIC	PINC, PINC2
+	RET
+	RJMP	ESPERA_SUELTA_INC_HORA
+
+
+// Boton para resta hora con antirebote
+BOTON_DEC_HORA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC3
+	RJMP	CONFIRM_DEC_HORA
+	RET
+
+CONFIRM_DEC_HORA:
+	CALL	DEC_HORAS
+
+ESPERA_SUELTA_DEC_HORA:
+	SBIC	PINC, PINC3
+	RET
+	RJMP	ESPERA_SUELTA_DEC_HORA
+
+// Boton para sumar minutos con antirebote
+BOTON_INC_MIN:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC4
+	RJMP	CONFIRM_INC_MIN
+	RET
+
+CONFIRM_INC_MIN:
+	CALL	INC_MINUTOS
+
+ESPERA_SUELTA_INC_MIN:
+	SBIC	PINC, PINC4
+	RET
+	RJMP	ESPERA_SUELTA_INC_MIN
+
+
+// Boton para restar minutos con antirebote
+BOTON_DEC_MIN:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC5
+	RJMP	CONFIRM_DEC_MIN
+	RET
+
+CONFIRM_DEC_MIN:
+	CALL	DEC_MINUTOS
+
+ESPERA_SUELTA_DEC_MIN:
+	SBIC	PINC, PINC5
+	RET
+	RJMP	ESPERA_SUELTA_DEC_MIN
+
+
+// Boton para sumar dia con antirebote
+BOTON_INC_DIA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC2
+	RJMP	CONFIRM_INC_DIA
+	RET
+
+CONFIRM_INC_DIA:
+	CALL	INC_DIA_EDIT
+
+ESPERA_SUELTA_INC_DIA:
+	SBIC	PINC, PINC2
+	RET
+	RJMP	ESPERA_SUELTA_INC_DIA
+
+
+// Boton para restar dia con antirebote
+BOTON_DEC_DIA:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC3
+	RJMP	CONFIRM_DEC_DIA
+	RET
+
+CONFIRM_DEC_DIA:
+	CALL	DEC_DIA_EDIT
+
+ESPERA_SUELTA_DEC_DIA:
+	SBIC	PINC, PINC3
+	RET
+	RJMP	ESPERA_SUELTA_DEC_DIA
+
+
+// Boton para sumar mes con antirebote
+BOTON_INC_MES:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC4
+	RJMP	CONFIRM_INC_MES
+	RET
+
+CONFIRM_INC_MES:
+	CALL	INC_MES_EDIT
+
+ESPERA_SUELTA_INC_MES:
+	SBIC	PINC, PINC4
+	RET
+	RJMP	ESPERA_SUELTA_INC_MES
+
+
+// Boton para restar mes con antirebote
+BOTON_DEC_MES:
+	CALL	DELAY_REBOTE
+	SBIS	PINC, PINC5
+	RJMP	CONFIRM_DEC_MES
+	RET
+
+CONFIRM_DEC_MES:
+	CALL	DEC_MES_EDIT
+
+ESPERA_SUELTA_DEC_MES:
+	SBIC	PINC, PINC5
+	RET
+	RJMP	ESPERA_SUELTA_DEC_MES
+
+
+// Incrementa la hora del reloj con overflow
+INC_HORAS:
+	LDS		R16, HORAS
+	INC		R16
+	CPI		R16, 24
+	BRNE	GUARDAR_INC_HORAS
+
+	CLR		R16
+
+GUARDAR_INC_HORAS:
+	STS		HORAS, R16
+	RET
+
+
+// REsta la hora del reloj con underflow
+DEC_HORAS:
+	LDS		R16, HORAS
+	CPI		R16, 0
+	BRNE	RESTAR_HORA
+
+	LDI		R16, 23
+	STS		HORAS, R16
+	RET
+
+RESTAR_HORA:
+	DEC		R16
+	STS		HORAS, R16
+	RET
+
+
+// Incrementa los minutos del reloj con overflow
+INC_MINUTOS:
+	LDS		R16, MINUTOS
+	INC		R16
+	CPI		R16, 60
+	BRNE	GUARDAR_INC_MIN
+
+	CLR		R16
+
+GUARDAR_INC_MIN:
+	STS		MINUTOS, R16
+	RET
+
+// Resta los minutos del reloj con underflow
+DEC_MINUTOS:
+	LDS		R16, MINUTOS
+	CPI		R16, 0
+	BRNE	RESTAR_MIN
+
+	LDI		R16, 59
+	STS		MINUTOS, R16
+	RET
+
+RESTAR_MIN:
+	DEC		R16
+	STS		MINUTOS, R16
+	RET
+
+
+// Incrementa el dia de mes respetando la cantidad en cada mes
+INC_DIA_EDIT:
+	LDS		R18, DIA
+	INC		R18
+
+	CALL	OBTENER_MAX_DIA		// R16 = maximo dia del mes actual
+	CP		R18, R16
+	BRLO	GUARDAR_DIA_INC
+	BREQ	GUARDAR_DIA_INC
+
+	LDI		R18, 1
+
+GUARDAR_DIA_INC:
+	STS		DIA, R18
+	RET
+
+
+// Resta el dia del mes respetando la cantidad de cada mes
+DEC_DIA_EDIT:
+	LDS		R18, DIA
+	CPI		R18, 1
+	BRNE	RESTAR_DIA_EDIT
+
+	CALL	OBTENER_MAX_DIA		// R16 = maximo dia del mes actual
+	STS		DIA, R16
+	RET
+
+RESTAR_DIA_EDIT:
+	DEC		R18
+	STS		DIA, R17
+	RET
+
+
+// Incrementa el mes con overflow
+INC_MES_EDIT:
+	LDS		R16, MES
+	INC		R16
+	CPI		R16, 13
+	BRNE	GUARDAR_INC_MES_EDIT
+
+	LDI		R16, 1
+
+GUARDAR_INC_MES_EDIT:
+	STS		MES, R16
+	CALL	AJUSTAR_DIA_VALIDO
+	RET
+
+
+// Decrementa el mes con underflow
+DEC_MES_EDIT:
+	LDS		R16, MES
+	CPI		R16, 1
+	BRNE	RESTAR_MES_EDIT
+
+	LDI		R16, 12
+	STS		MES, R16
+	CALL	AJUSTAR_DIA_VALIDO
+	RET
+
+RESTAR_MES_EDIT:
+	DEC		R16
+	STS		MES, R16
+	CALL	AJUSTAR_DIA_VALIDO
+	RET
+
+
+// Devuelve en R16 el valor maximo de dia en cada mes
+OBTENER_MAX_DIA:
+	LDS		R17, MES
+
+	CPI		R17, 2
+	BREQ	MAX_FEBRERO
+
+	CPI		R17, 4
+	BREQ	MAX_30
+	CPI		R17, 6
+	BREQ	MAX_30
+	CPI		R17, 9
+	BREQ	MAX_30
+	CPI		R17, 11
+	BREQ	MAX_30
+
+	LDI		R16, 31
+	RET
+
+MAX_FEBRERO:
+	LDI		R16, 28
+	RET
+
+MAX_30:
+	LDI		R16, 30
+	RET
+
+
+// Corrige el dia actual si excede el madimos del mes
+AJUSTAR_DIA_VALIDO:
+	CALL	OBTENER_MAX_DIA
+	MOV		R18, R16
+
+	LDS		R16, DIA
+	CP		R16, R18
+	BREQ	SALIR_AJUSTE_DIA
+	BRLO	SALIR_AJUSTE_DIA
+
+	STS		DIA, R18
+
+SALIR_AJUSTE_DIA:
+	RET
+
+CHECK_MODE_BUTTON:
+	
+	IN		R16, PIND // Leemos el estado actual
+	LDS		R17, PREV_D7 // Cargamos el estado anterior
+
+	SBRS	R17, 7
+	RJMP	GUARDAR_SALIR // Si ya era 0, no cambio
+
+	SBRS	R16, 7
+	RJMP	CONFIRMAR_MODO // Revisamos si el bit 7 es 0
+
+	RJMP	GUARDAR_SALIR
+
+
+// Confirma que el modo fue realmente presionado
+CONFIRMAR_MODO:
+	CALL	DELAY_REBOTE
+	SBIS	PIND, PIND7
+	RJMP	HACER_CAMBIO_MODO
+	RJMP	GUARDAR_SALIR
+
+HACER_CAMBIO_MODO:
+	CALL	CHANGE_MODE
+
+ESPERA_SUELTA_MODO:
+	SBIC	PIND, PIND7
+	RJMP	GUARDAR_SALIR
+	RJMP	ESPERA_SUELTA_MODO
+
+GUARDAR_SALIR:
+	IN		R16, PIND
+	STS		PREV_D7, R16 // Guardamos la actual como anterior
+	RET
+
+
+// Avanza al siguiente modo y reinicia el mensaje temporal
+CHANGE_MODE:
+	INC		MODE
+	CPI		MODE, MAX_MODES // Compara si ya llego al último
+
+	BRNE	NO_RESET_MODE
+	CLR		MODE
+
+NO_RESET_MODE:
+	CALL	LOAD_MODE_MENSAJE // Muestra el estado
+
+	LDI		R16, 1
+	STS		MENSAJE, R16
+
+	LDI		R16, LOW(1000)
+	STS		MEN_LOW, R16
+	LDI		R16, HIGH(1000)
+	STS		MEN_HIGH, R16
+
+	RET
+/****************************************/
+// NON-Interrupt subroutines
+
+INIT_TIMER0:
+
+	LDI		R16, (1<<WGM01) // Lo ponemos en modo CTC
+	OUT		TCCR0A, R16
+
+	LDI		R16, (1<<CS01) // Prescaler 8      
+	OUT		TCCR0B, R16
+
+	LDI		R16, T0VALUE // Comparamos el timer con n
+	OUT		OCR0A, R16
+
+	LDI		R16, (1<<OCIE0A) // Habilitamos compare match A
+	STS		TIMSK0, R16
+	RET
+
+
+INIT_TIMER1:
+	
+	LDI		R16, 0x00
+	STS		TCCR1A, R16                 
+
+	LDI		R16, (1<<WGM12) | (1<<CS11) | (1<<CS10)
+	STS		TCCR1B, R16 // Habilitamos CTC y prescaler de 64
+
+	LDI		R16, HIGH(T1VALUE)
+	STS		OCR1AH, R16
+	LDI		R16, LOW(T1VALUE)
+	STS		OCR1AL, R16
+
+	LDI		R16, (1<<OCIE1A) // Habilitamos compare match A
+	STS		TIMSK1, R16
+	RET
+
+LOAD_MODE_MENSAJE:
+
+	// Cargamos en Z la direccion
+	LDI		ZH, HIGH(TABLA_MODOS << 1)
+	LDI		ZL, LOW(TABLA_MODOS << 1)
+
+	// Lo corremos
+	MOV		R18, MODE
+	LSL		R18
+	LSL		R18
+
+	// Sumamos los valores y manejamos el carry
+	CLR		R19
+	ADD		ZL, R18
+	ADC		ZH, R19	
+
+	// Leemos y mostramos
+	LPM		R16, Z+
+	STS		DISP0, R16
+
+	LPM		R16, Z+
+	STS		DISP1, R16
+
+	LPM		R16, Z+
+	STS		DISP2, R16
+
+	LPM		R16, Z+
+	STS		DISP3, R16
+
+	RET
+
+
+// Convierte un numero decimal a su mensaje en el display
+NUM_A_7SEG:
+	CPI		R16, 0
+	BREQ	NUM0
+	CPI		R16, 1
+	BREQ	NUM1
+	CPI		R16, 2
+	BREQ	NUM2
+	CPI		R16, 3
+	BREQ	NUM3
+	CPI		R16, 4
+	BREQ	NUM4
+	CPI		R16, 5
+	BREQ	NUM5
+	CPI		R16, 6
+	BREQ	NUM6
+	CPI		R16, 7
+	BREQ	NUM7
+	CPI		R16, 8
+	BREQ	NUM8
+	CPI		R16, 9
+	BREQ	NUM9
+	RET
+
+NUM0:
+	LDI		R16, SEG_0
+	RET
+NUM1:
+	LDI		R16, SEG_1
+	RET
+NUM2:
+	LDI		R16, SEG_2
+	RET
+NUM3:
+	LDI		R16, SEG_3
+	RET
+NUM4:
+	LDI		R16, SEG_4
+	RET
+NUM5:
+	LDI		R16, SEG_5
+	RET
+NUM6:
+	LDI		R16, SEG_6
+	RET
+NUM7:
+	LDI		R16, SEG_7
+	RET
+NUM8:
+	LDI		R16, SEG_8
+	RET
+NUM9:
+	LDI		R16, SEG_9
+	RET
+
+APAGAR_DIGITOS:
+
+	// Apagamos para evitar ghosting
+	CBI		PORTD, PORTD2 // DIG1
+	CBI		PORTD, PORTD3 // DIG2
+	CBI		PORTD, PORTD4 // DIG3
+	CBI		PORTD, PORTD5 // DIG4
+	RET
+
+CARGAR_SEGMENTOS:
+
+	MOV		R17, R16
+
+	// Segmento a
+	SBRS	R17, 0
+	CBI		PORTB, PORTB0
+	SBRC	R17, 0
+	SBI		PORTB, PORTB0
+
+	// Segmento b
+	SBRS	R17, 1
+	CBI		PORTB, PORTB1
+	SBRC	R17, 1
+	SBI		PORTB, PORTB1
+
+	// Segmento c
+	SBRS	R17, 2
+	CBI		PORTB, PORTB2
+	SBRC	R17, 2
+	SBI		PORTB, PORTB2
+
+	// Segmento d
+	SBRS	R17, 3
+	CBI		PORTB, PORTB3
+	SBRC	R17, 3
+	SBI		PORTB, PORTB3
+
+	// Segmento e
+	SBRS	R17, 4
+	CBI		PORTB, PORTB4
+	SBRC	R17, 4
+	SBI		PORTB, PORTB4
+
+	// Segmento f
+	SBRS	R17, 5
+	CBI		PORTB, PORTB5
+	SBRC	R17, 5
+	SBI		PORTB, PORTB5
+
+	// Segmento g
+	SBRS	R17, 6
+	CBI		PORTC, PORTC0
+	SBRC	R17, 6
+	SBI		PORTC, PORTC0
+
+	RET
+
+
+// Multiplexa un digito del display en cada call
+MUX_DISPLAY:
+	
+	LDS		R18, MUX
+
+	CPI		R18, 0
+	BREQ	DIG0
+
+	CPI		R18, 1
+	BREQ	DIG1
+
+	CPI		R18, 2
+	BREQ	DIG2
+
+	RJMP	DIG3
+
+DIG0:
+	LDS		R16, DISP3
+	CALL	CARGAR_SEGMENTOS
+	SBI		PORTD, PORTD2
+	RJMP	SIGUIENTE_DIG
+
+DIG1:
+	LDS		R16, DISP2
+	CALL	CARGAR_SEGMENTOS
+	SBI		PORTD, PORTD3
+	RJMP	SIGUIENTE_DIG
+
+DIG2:
+	LDS		R16, DISP1
+	CALL	CARGAR_SEGMENTOS
+	SBI		PORTD, PORTD4
+	RJMP	SIGUIENTE_DIG
+
+DIG3:
+	LDS		R16, DISP0
+	CALL	CARGAR_SEGMENTOS
+	SBI		PORTD, PORTD5
+
+
+// Avanza al siguiente digito
+SIGUIENTE_DIG:
+	INC		R18
+	CPI		R18, 4
+	BRNE	GUARDAR_MUX
+
+	CLR		R18
+
+
+// Guardar el indice actual
+GUARDAR_MUX:
+	STS		MUX, R18
+	RET
+
+
+// Apaga segmentos antes del siguiente
+APAGAR_SEGMENTOS:
+
+	CBI		PORTB, PORTB0
+	CBI		PORTB, PORTB1
+	CBI		PORTB, PORTB2
+	CBI		PORTB, PORTB3
+	CBI		PORTB, PORTB4
+	CBI		PORTB, PORTB5
+	CBI		PORTC, PORTC0
+	RET
+
+MOSTRAR_HORA:
+	// Decenas y unidades de hora
+	LDS		R16, HORAS
+	CLR		R17
+
+// Calcula la decena de hroas
+DEC_HORA:
+	CPI		R16, 10
+	BRLO	FIN_DEC_HORA
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_HORA
+
+FIN_DEC_HORA:
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP0, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP1, R16
+
+	// Decenas y unidades de minuto
+	LDS		R16, MINUTOS
+	CLR		R17
+
+// Calcula la decena de minutos
+DEC_MIN:	
+	CPI		R16, 10
+	BRLO	FIN_DEC_MIN
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_MIN
+
+FIN_DEC_MIN:
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP2, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP3, R16
+	
+	RET
+
+// Convierte y carga la fecha actual
+MOSTRAR_FECHA:
+	// Decenas y unidades de dia
+	LDS		R16, DIA
+	CLR		R17
+
+DEC_DIA:
+	CPI		R16, 10
+	BRLO	FIN_DEC_DIA
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_DIA
+
+FIN_DEC_DIA:
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP0, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP1, R16
+
+	// Decenas y unidades de mes
+	LDS		R16, MES
+	CLR		R17
+
+DEC_MES:
+	CPI		R16, 10
+	BRLO	FIN_DEC_MES
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_MES
+
+FIN_DEC_MES:
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP2, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP3, R16
+
+	RET
+	
+// Selecciona que informacion mostrar en el display
+ACTUALIZAR_DISPLAY:
+
+	CPI		MODE, MODE_CLOCK
+	BRNE	SIGUE_1
+	RJMP	MOSTRAR_HORA
+
+SIGUE_1:
+	CPI		MODE, MODE_SET_CLOCK
+	BRNE	SIGUE_2
+	RJMP	MOSTRAR_HORA
+
+SIGUE_2:
+	CPI		MODE, MODE_DATE
+	BRNE	SIGUE_3
+	RJMP	MOSTRAR_FECHA
+
+SIGUE_3:
+	CPI		MODE, MODE_SET_DATE
+	BRNE	SIGUE_4
+	RJMP	MOSTRAR_FECHA
+
+SIGUE_4:
+	CPI		MODE, MODE_SET_ALARM
+	BRNE	SIGUE_5
+	RJMP	MOSTRAR_ALARMA
+
+SIGUE_5:
+	RET
+
+// Actualiza todo lo de modo de reloj
+ACTUALIZAR_RELOJ:
+	
+	// Segundos
+	LDS		R16, SEGUNDOS
+	INC		R16
+	STS		SEGUNDOS, R16
+
+	CPI		R16, 60
+	BRNE	EXIT_RELOJ
+	 
+	CLR		R16
+	STS		SEGUNDOS, R16
+
+	// Minutos
+	LDS		R16, MINUTOS
+	INC		R16
+	STS		MINUTOS, R16
+
+	CPI		R16, 60
+	BRNE	EXIT_RELOJ
+
+	CLR		R16
+	STS		MINUTOS, R16
+
+	// Horas
+	LDS		R16, HORAS
+	INC		R16
+	STS		HORAS, R16
+
+	CPI		R16, 24
+	BRNE	EXIT_RELOJ
+
+	CLR		R16
+	STS		HORAS, R16
+
+	CALL	ACTUALIZAR_FECHA
+EXIT_RELOJ:
+	RET
+
+// Actualiza todo lo de modo de fecha
+ACTUALIZAR_FECHA:
+	LDS		R16, DIA
+	INC		R16
+	STS		DIA, R16
+
+	LDS		R17, MES
+	// Revisamos si es febrero
+	CPI		R17, 2
+	BREQ	MES_FEBRERO
+
+	// Revisamos si son de 30 dias
+	CPI		R17, 4
+	BREQ	MES_30
+	CPI		R17, 6
+	BREQ	MES_30
+	CPI		R17, 9
+	BREQ	MES_30
+	CPI		R17, 11
+	BREQ	MES_30
+
+	// resto son de 31
+	RJMP	MES_31
+
+MES_FEBRERO:
+	LDS		R16, DIA
+	CPI		R16, 29
+
+	BRNE	SALIR_FECHA
+
+	LDI		R16, 1
+	STS		DIA, R16
+	RJMP	AVANZAR_MES
+
+MES_30:
+	LDS		R16, DIA
+	CPI		R16, 31
+
+	BRNE	SALIR_FECHA
+
+	LDI		R16, 1
+	STS		DIA, R16
+	RJMP	AVANZAR_MES
+
+MES_31:
+	LDS		R16, DIA
+	CPI		R16, 32
+
+	BRNE	SALIR_FECHA
+
+	LDI		R16, 1
+	STS		DIA, R16
+	RJMP	AVANZAR_MES
+
+AVANZAR_MES:
+	LDS		R16, MES
+	INC		R16
+	STS		MES, R16
+
+	CPI		R16, 13
+	BRNE	SALIR_FECHA
+
+	LDI		R16, 1
+	STS		MES, R16
+
+SALIR_FECHA:
+	RET
+
+// Carga el mensaje de "date"
+MOSTRAR_DATE:
+
+	LDI		R16, SEG_d
+	STS		DISP0, R16
+
+	LDI		R16, SEG_A
+	STS		DISP1, R16
+
+	LDI		R16, SEG_t
+	STS		DISP2, R16
+
+	LDI		R16, SEG_E
+	STS		DISP3, R16
+
+	RET
+
+	// Convierte y carga la hora d ela alarma en el display
+MOSTRAR_ALARMA:
+	LDS		R16, AL_HORAS
+	CLR		R17
+
+DEC_AL_HORA:
+
+	CPI		R16, 10
+	BRLO	FIN_DEC_AL_HORA
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_AL_HORA
+
+FIN_DEC_AL_HORA:
+	
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP0, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP1, R16
+
+	LDS		R16, AL_MINUTOS
+	CLR		R17
+
+DEC_AL_MIN:
+	
+	CPI		R16, 10
+	BRLO	FIN_DEC_AL_MIN
+	SUBI	R16, 10
+	INC		R17
+	RJMP	DEC_AL_MIN
+
+FIN_DEC_AL_MIN:
+	
+	MOV		R18, R16
+	MOV		R16, R17
+
+	CALL	NUM_A_7SEG
+	STS		DISP2, R16
+
+	MOV		R16, R18
+	CALL	NUM_A_7SEG
+	STS		DISP3, R16
+
+	RET
+/****************************************/
+// Interrupt routines
+
+// Interrupciones en el puerto C
+PINC_ISR:
+	PUSH	R16
+	IN		R16, SREG
+	PUSH	R16
+
+	SBR		ACTION, (1<<FLAG_PCINT)
+
+	POP		R16
+	OUT		SREG, R16
+	POP		R16
+
+	RETI
+
+// Interrupciones en el puerto D
+PIND_ISR:
+	PUSH	R16
+	IN		R16, SREG
+	PUSH	R16
+
+	SBR		ACTION, (1<<FLAG_PCINT)
+
+	POP		R16
+	OUT		SREG, R16
+	POP		R16
+	RETI
+
+// Marca el tick de un segundo
+TIMER1_ISR:
+	PUSH	R16
+	IN		R16, SREG
+	PUSH	R16
+
+	SBR		ACTION, (1<<FLAG_TIMER_1)
+
+	POP		R16
+	OUT		SREG, R16
+	POP		R16
+	RETI
+
+// Marca el tick de 1 ms
+TIMER0_ISR:
+	PUSH	R16
+	PUSH	R17
+	PUSH	R18
+
+	IN		R16, SREG
+	PUSH	R16
+
+	CALL	APAGAR_DIGITOS
+	CALL	APAGAR_SEGMENTOS
+	NOP
+	NOP
+	CALL	MUX_DISPLAY
+
+	// Parpadeo de puntos
+	LDS		R16, PUNTO_CONT
+	INC		R16
+	STS		PUNTO_CONT, R16
+
+	CPI		R16, 250
+	BRNE	FIN_PUNTO
+
+	CLR		R16
+	STS		PUNTO_CONT, R16
+
+	LDS		R16, PUNTO_HALF
+	INC		R16
+	STS		PUNTO_HALF, R16
+
+	CPI		R16, 2
+	BRNE	FIN_PUNTO
+
+	CLR		R16
+	STS		PUNTO_HALF, R16
+
+	SBIS	PORTC, PORTC1
+	RJMP	ENCENDER_PUNTO
+
+	CBI		PORTC, PORTC1
+	RJMP	FIN_PUNTO
+
+// Enciende ":"
+ENCENDER_PUNTO:
+	SBI		PORTC, PORTC1
+
+FIN_PUNTO:
+	// Mensaje por 1 segundo
+	LDS		R16, MENSAJE
+	CPI		R16, 1
+	BRNE	FIN_TIMER0
+
+	LDS		R16, MEN_LOW
+	SUBI	R16, 1
+	STS		MEN_LOW, R16
+
+	LDS		R17, MEN_HIGH
+	SBCI	R17, 0
+	STS		MEN_HIGH, R17
+
+	LDS		R16, MEN_LOW
+	LDS		R17, MEN_HIGH
+	OR		R16, R17
+	BRNE	FIN_TIMER0
+
+	CLR		R16
+	STS		MENSAJE, R16
+
+FIN_TIMER0:
+
+	POP		R16
+	OUT		SREG, R16
+
+	POP		R18
+	POP		R17
+	POP		R16
+	RETI
+
+//*/**************************************/
+
+TABLA_MODOS:
+	.db SEG_C, SEG_L, SEG_O, SEG_C		// MODE_CLOCK
+	.db SEG_S, SEG_t, SEG_C, SEG_L		// MODE_SET_CLOCK
+	.db SEG_d, SEG_A, SEG_t, SEG_E		// MODE_DATE
+	.db SEG_S, SEG_t, SEG_d, SEG_A		// MODE_SET_DATE
+	.db SEG_A, SEG_L, SEG_A, SEG_r		// MODE_SET_ALARM
+	.db SEG_r, SEG_I, SEG_n, SEG_G		// MODE_RING
